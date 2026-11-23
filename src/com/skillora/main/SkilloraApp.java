@@ -4,24 +4,31 @@ import com.skillora.database.DBConnection;
 import com.skillora.exception.AuthenticationException;
 import com.skillora.exception.SkilloraException;
 import com.skillora.model.Admin;
+import com.skillora.model.CompanyVisit;
+import com.skillora.model.Hackathon;
 import com.skillora.model.Student;
 import com.skillora.model.User;
 import com.skillora.service.AuthService;
+import com.skillora.service.PlacementService;
 import com.skillora.utility.ConsoleTheme;
 import com.skillora.utility.InputValidator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 /**
- * Main application entry point for the Skillora Authentication & Student Profile Management Module.
- * Contributed by: Akanshi
+ * Main application entry point for the Skillora Platform.
+ * Features:
+ * - User Authentication & Student Profile Management (Contributed by: Akanshi)
+ * - Campus Placement Drives, Hackathons & Admin Panel (Contributed by: Paras Jain)
  */
 public class SkilloraApp {
 
     private static final Scanner scanner = new Scanner(System.in);
     private static final AuthService authService = new AuthService();
+    private static final PlacementService placementService = new PlacementService();
 
     public static void main(String[] args) {
         ConsoleTheme.printBanner();
@@ -82,7 +89,8 @@ public class SkilloraApp {
             if ("STUDENT".equalsIgnoreCase(user.getRole()) && user instanceof Student) {
                 showStudentDashboard((Student) user);
             } else if ("ADMIN".equalsIgnoreCase(user.getRole()) && user instanceof Admin) {
-                showAdminDashboard((Admin) user);
+                AdminMenu adminMenu = new AdminMenu(scanner, authService, placementService);
+                adminMenu.showDashboard((Admin) user);
             }
         } catch (AuthenticationException e) {
             ConsoleTheme.printWarning(e.getMessage());
@@ -100,9 +108,11 @@ public class SkilloraApp {
             ConsoleTheme.printDivider();
             System.out.println("[1] View My Profile");
             System.out.println("[2] Update My Profile");
-            System.out.println("[3] Logout");
+            System.out.println("[3] View Upcoming Campus Placement Drives");
+            System.out.println("[4] Explore Inter-College Hackathons");
+            System.out.println("[5] Logout");
             ConsoleTheme.printDivider();
-            System.out.print("Select an option (1-3): ");
+            System.out.print("Select an option (1-5): ");
 
             String choice = scanner.nextLine().trim();
 
@@ -114,43 +124,18 @@ public class SkilloraApp {
                     updateProfile(student);
                     break;
                 case "3":
+                    viewUpcomingVisits();
+                    break;
+                case "4":
+                    exploreHackathons();
+                    break;
+                case "5":
                     authService.logout();
                     ConsoleTheme.printInfo("You have been logged out successfully.");
                     inDashboard = false;
                     break;
                 default:
-                    ConsoleTheme.printError("Invalid choice. Please select 1-3.");
-            }
-        }
-    }
-
-    private static void showAdminDashboard(Admin admin) {
-        boolean inDashboard = true;
-        while (inDashboard) {
-            ConsoleTheme.printHeader("Administrator Dashboard - Skillora");
-            System.out.printf("Admin: %s | Staff ID: %s | Dept: %s\n",
-                    admin.getName(), admin.getStaffId(), admin.getDepartment());
-            ConsoleTheme.printDivider();
-            System.out.println("[1] View Admin Details");
-            System.out.println("[2] Logout");
-            ConsoleTheme.printDivider();
-            System.out.print("Select an option (1-2): ");
-
-            String choice = scanner.nextLine().trim();
-
-            switch (choice) {
-                case "1":
-                    ConsoleTheme.printSubHeader("Placement Admin Details");
-                    System.out.println(admin.getDetails());
-                    System.out.println("Email: " + admin.getEmail());
-                    break;
-                case "2":
-                    authService.logout();
-                    ConsoleTheme.printInfo("Admin logged out successfully.");
-                    inDashboard = false;
-                    break;
-                default:
-                    ConsoleTheme.printError("Invalid option. Please choose 1-2.");
+                    ConsoleTheme.printError("Invalid choice. Please select 1-5.");
             }
         }
     }
@@ -216,6 +201,52 @@ public class SkilloraApp {
             }
         } catch (SkilloraException e) {
             ConsoleTheme.printError(e.getMessage());
+        }
+    }
+
+    private static void viewUpcomingVisits() {
+        ConsoleTheme.printSubHeader("Upcoming Campus Placement Drives");
+        try {
+            List<CompanyVisit> visits = placementService.getCompanyVisits();
+            if (visits.isEmpty()) {
+                ConsoleTheme.printInfo("No campus recruitment drives scheduled currently.");
+                return;
+            }
+            System.out.printf("%-20s | %-18s | %-12s | %-12s | %-20s\n",
+                    "Company", "College", "Drive Type", "Date", "Eligible Branches");
+            System.out.println("--------------------------------------------------------------------------------");
+            for (CompanyVisit v : visits) {
+                System.out.printf("%-20s | %-18s | %-12s | %-12s | %-20s\n",
+                        v.getCompanyName() != null ? v.getCompanyName() : "N/A",
+                        v.getCollegeName(),
+                        v.getDriveType(),
+                        v.getVisitDate().toString(),
+                        v.getEligibleBranches());
+            }
+        } catch (SkilloraException e) {
+            ConsoleTheme.printError("Could not fetch placement drives: " + e.getMessage());
+        }
+    }
+
+    private static void exploreHackathons() {
+        ConsoleTheme.printSubHeader("Inter-College Hackathons & Competitions");
+        try {
+            List<Hackathon> list = placementService.getHackathons();
+            if (list.isEmpty()) {
+                ConsoleTheme.printInfo("No hackathons listed at this moment.");
+                return;
+            }
+            System.out.printf("%-5s | %-25s | %-18s | %-12s | %-15s | %-12s\n",
+                    "ID", "Title", "Host", "Event Date", "Domain", "Deadline");
+            System.out.println("--------------------------------------------------------------------------------");
+            for (Hackathon h : list) {
+                System.out.printf("%-5d | %-25s | %-18s | %-12s | %-15s | %-12s\n",
+                        h.getHackathonId(), h.getTitle(), h.getHostCollege(),
+                        h.getEventDate().toString(), h.getDomain(),
+                        h.getRegistrationDeadline().toString());
+            }
+        } catch (SkilloraException e) {
+            ConsoleTheme.printError("Could not fetch hackathons: " + e.getMessage());
         }
     }
 
