@@ -1,6 +1,8 @@
 -- ==============================================================================
--- Skillora Database Schema & Seed Data (Akanshi's Contribution)
--- Module: Student Registration, Authentication & Profile Management
+-- Skillora Database Schema & Seed Data
+-- Integrated Modules:
+-- 1. Student Registration, Authentication & Profile Management (Akanshi)
+-- 2. Company Placement Drives, Campus Visits & Hackathons (Paras Jain)
 -- Course: Programming in Java (25CSE0202)
 -- ==============================================================================
 
@@ -34,6 +36,38 @@ CREATE TABLE IF NOT EXISTS admins (
     department VARCHAR(100) NOT NULL,
     staff_id VARCHAR(50) NOT NULL UNIQUE,
     FOREIGN KEY (admin_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- 4. Companies Table (Contributed by Paras Jain)
+CREATE TABLE IF NOT EXISTS companies (
+    company_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_name VARCHAR(150) NOT NULL UNIQUE,
+    industry VARCHAR(100) NOT NULL,
+    website VARCHAR(150),
+    contact_email VARCHAR(100)
+);
+
+-- 5. Company Visits Table - Placement Calendar (Contributed by Paras Jain)
+CREATE TABLE IF NOT EXISTS company_visits (
+    visit_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT NOT NULL,
+    college_name VARCHAR(150) NOT NULL,
+    visit_date DATE NOT NULL,
+    drive_type ENUM('On-Campus', 'Pool-Campus', 'Virtual') DEFAULT 'On-Campus',
+    eligible_branches VARCHAR(255) NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE
+);
+
+-- 6. Hackathons Table - Competitions Directory (Contributed by Paras Jain)
+CREATE TABLE IF NOT EXISTS hackathons (
+    hackathon_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    host_college VARCHAR(150) NOT NULL,
+    event_date DATE NOT NULL,
+    domain VARCHAR(100) NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    team_size_limit INT DEFAULT 4,
+    registration_deadline DATE NOT NULL
 );
 
 -- ==============================================================================
@@ -91,9 +125,26 @@ VALUES (1, 'Dr. Sharma (Placement Officer)', 'admin@skillora.edu', 'admin123', '
 INSERT IGNORE INTO admins (admin_id, department, staff_id) 
 VALUES (1, 'Training & Placement Cell', 'TPO-001');
 
--- Default Seed Student (Akanshi)
-INSERT IGNORE INTO users (user_id, name, email, password, role) 
-VALUES (2, 'Akanshi Sharma', 'akanshi@skillora.edu', 'pass123', 'STUDENT');
+-- Default Seed Students
+INSERT IGNORE INTO users (user_id, name, email, password, role) VALUES 
+(2, 'Akanshi Sharma', 'akanshi@skillora.edu', 'pass123', 'STUDENT'),
+(5, 'Paras Malhotra', 'paras@skillora.edu', 'pass123', 'STUDENT');
+
+INSERT IGNORE INTO students (student_id, roll_number, college, branch, semester, cgpa) VALUES 
+(2, '23CS101', 'Chitkara University', 'Computer Science', 5, 8.75),
+(5, '23IT205', 'Chitkara University', 'Information Technology', 5, 7.90);
+
+-- Sample Companies (Contributed by Paras Jain)
+INSERT IGNORE INTO companies (company_id, company_name, industry, website, contact_email) VALUES
+(1, 'Google India', 'Technology', 'https://careers.google.com', 'campus@google.com'),
+(2, 'Infosys', 'IT Services', 'https://infosys.com', 'careers@infosys.com'),
+(3, 'Microsoft IDC', 'Software Development', 'https://careers.microsoft.com', 'recruit@microsoft.com');
+
+-- Sample Company Visits (Contributed by Paras Jain)
+INSERT IGNORE INTO company_visits (visit_id, company_id, college_name, visit_date, drive_type, eligible_branches) VALUES
+(1, 1, 'Chitkara University', '2026-12-05', 'On-Campus', 'Computer Science, Information Technology'),
+(2, 2, 'Chitkara University', '2026-12-12', 'On-Campus', 'Computer Science, Information Technology, Electronics'),
+(3, 3, 'Chitkara University', '2026-12-20', 'Virtual', 'Computer Science, Information Technology');
 
 INSERT IGNORE INTO students (student_id, roll_number, college, branch, semester, cgpa) 
 VALUES (2, '23CS101', 'Chitkara University', 'Computer Science', 5, 8.75);
@@ -116,3 +167,8 @@ INSERT IGNORE INTO internships (internship_id, company_id, title, description, s
 (101, 1, 'Software Engineer Intern', 'Develop scalable backend microservices and REST APIs.', 50000.00, 6, 'Bangalore', 8.00, 'Computer Science, Information Technology', 5, 'Java, MySQL', '2026-12-25'),
 (102, 2, 'Systems Trainee Intern', 'Enterprise application maintenance, debugging, and testing.', 25000.00, 3, 'Chandigarh', 7.00, 'Computer Science, Information Technology, Electronics', 4, 'Java', '2026-12-20'),
 (103, 3, 'Cloud Solutions Intern', 'Assist with Azure deployment pipelines and monitoring.', 45000.00, 6, 'Hyderabad', 8.25, 'Computer Science, Information Technology', 5, 'Python, Cloud', '2026-12-30');
+-- Sample Hackathons (Contributed by Paras Jain)
+INSERT IGNORE INTO hackathons (hackathon_id, title, host_college, event_date, domain, location, team_size_limit, registration_deadline) VALUES
+(1, 'Smart India Innovation Hackathon', 'IIT Delhi', '2026-12-18', 'FinTech & Web3', 'New Delhi', 4, '2026-12-10'),
+(2, 'HackPulse 2026', 'Chitkara University', '2026-12-22', 'Healthcare & AI', 'Chandigarh', 4, '2026-12-15'),
+(3, 'CodeQuest National Challenge', 'BITS Pilani', '2027-01-10', 'EdTech & Smart Cities', 'Pilani', 3, '2026-12-28');
