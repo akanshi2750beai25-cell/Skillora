@@ -1,12 +1,12 @@
 package com.skillora.model;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a student profile in Skillora. Inherits common properties from User.
- * Demonstrates: Inheritance, 'super' keyword, Polymorphism (method overriding), Encapsulation.
- * 
- * Contributed by: Akanshi
+ * Demonstrates: Inheritance, 'super' keyword, Polymorphism (method overriding), Encapsulation, Collections.
  */
 public class Student extends User {
 
@@ -15,10 +15,12 @@ public class Student extends User {
     private String branch;
     private int semester;
     private double cgpa;
+    private List<Skill> skills;
 
     // Default Constructor
     public Student() {
         super();
+        this.skills = new ArrayList<>();
         this.role = "STUDENT";
     }
 
@@ -31,6 +33,7 @@ public class Student extends User {
         this.branch = branch;
         this.semester = semester;
         this.cgpa = cgpa;
+        this.skills = new ArrayList<>();
     }
 
     // Full Parameterized Constructor (Used when querying from database)
@@ -42,6 +45,7 @@ public class Student extends User {
         this.branch = branch;
         this.semester = semester;
         this.cgpa = cgpa;
+        this.skills = new ArrayList<>();
     }
 
     // Implementing abstract method from User (Method Overriding & Polymorphism)
@@ -90,5 +94,20 @@ public class Student extends User {
 
     public void setCgpa(double cgpa) {
         this.cgpa = cgpa;
+    }
+
+    public List<Skill> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(List<Skill> skills) {
+        this.skills = skills;
+    }
+
+    public void addSkill(Skill skill) {
+        if (this.skills == null) {
+            this.skills = new ArrayList<>();
+        }
+        this.skills.add(skill);
     }
 }
