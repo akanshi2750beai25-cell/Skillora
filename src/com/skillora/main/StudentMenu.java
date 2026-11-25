@@ -236,20 +236,24 @@ public class StudentMenu {
         ConsoleTheme.printSubHeader("Upcoming Campus Recruitment Visits");
         try {
             List<CompanyVisit> visits = placementService.getCompanyVisits();
-            if (visits.isEmpty()) {
+            if (visits == null || visits.isEmpty()) {
                 ConsoleTheme.printInfo("No campus visits scheduled at this time.");
-                return;
+            } else {
+                System.out.printf("%-20s | %-12s | %-14s | %s\n", "Company", "Visit Date", "Drive Type", "Eligible Branches");
+                System.out.println("--------------------------------------------------------------------------------");
+                for (CompanyVisit v : visits) {
+                    String comp = v.getCompanyName() != null ? v.getCompanyName() : "N/A";
+                    String date = v.getVisitDate() != null ? v.getVisitDate().toString() : "N/A";
+                    String drive = v.getDriveType() != null ? v.getDriveType() : "N/A";
+                    String branches = v.getEligibleBranches() != null ? v.getEligibleBranches() : "All";
+                    System.out.printf("%-20s | %-12s | %-14s | %s\n", comp, date, drive, branches);
+                }
             }
-
-            System.out.printf("%-18s | %-12s | %-12s | %-25s\n", "Company", "Visit Date", "Drive Type", "Eligible Branches");
-            System.out.println("--------------------------------------------------------------------------------");
-            for (CompanyVisit v : visits) {
-                System.out.printf("%-18s | %-12s | %-12s | %-25s\n",
-                        v.getCompanyName(), v.getVisitDate(), v.getDriveType(), v.getEligibleBranches());
-            }
-        } catch (SkilloraException e) {
-            ConsoleTheme.printError(e.getMessage());
+        } catch (Exception e) {
+            ConsoleTheme.printError("Could not retrieve placement drives: " + e.getMessage());
         }
+        System.out.print("\nPress Enter to return to Dashboard...");
+        scanner.nextLine();
     }
 
     private void exploreHackathons() {
@@ -319,20 +323,25 @@ public class StudentMenu {
         ConsoleTheme.printSubHeader("My Submitted Applications");
         try {
             List<Application> apps = internshipService.getStudentApplications(student.getUserId());
-            if (apps.isEmpty()) {
+            if (apps == null || apps.isEmpty()) {
                 ConsoleTheme.printInfo("You have not applied to any internships yet.");
-                return;
+            } else {
+                System.out.printf("%-8s | %-25s | %-18s | %-12s | %-15s\n", "App ID", "Role", "Company", "Status", "Date");
+                System.out.println("--------------------------------------------------------------------------------");
+                for (Application a : apps) {
+                    String dateStr = a.getApplicationDate() != null ? a.getApplicationDate().toString().substring(0, 10) : "N/A";
+                    System.out.printf("%-8d | %-25s | %-18s | %-12s | %-15s\n",
+                            a.getApplicationId(),
+                            a.getInternshipTitle() != null ? a.getInternshipTitle() : "N/A",
+                            a.getCompanyName() != null ? a.getCompanyName() : "N/A",
+                            a.getStatus() != null ? a.getStatus() : "APPLIED",
+                            dateStr);
+                }
             }
-
-            System.out.printf("%-8s | %-25s | %-18s | %-12s | %-15s\n", "App ID", "Role", "Company", "Status", "Date");
-            System.out.println("--------------------------------------------------------------------------------");
-            for (Application a : apps) {
-                System.out.printf("%-8d | %-25s | %-18s | %-12s | %-15s\n",
-                        a.getApplicationId(), a.getInternshipTitle(), a.getCompanyName(), a.getStatus(),
-                        a.getApplicationDate().toString().substring(0, 10));
-            }
-        } catch (SkilloraException e) {
-            ConsoleTheme.printError(e.getMessage());
+        } catch (Exception e) {
+            ConsoleTheme.printError("Could not retrieve applications: " + e.getMessage());
         }
+        System.out.print("\nPress Enter to return to Dashboard...");
+        scanner.nextLine();
     }
 }
